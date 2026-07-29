@@ -6,6 +6,7 @@ planning (Dijkstra global planner + DWA local planner), running on
 ROS1 and Gazebo.
 
 ![simulation demo](media/simulation_demo.gif)
+![real robot](media/real_robot.png)
 
 ## Demo
 
