@@ -1,0 +1,11 @@
+<launch>
+  <!-- Full autonomous navigation demo: assumes a map has already been
+       built with gmapping_demo.launch and saved to maps/hotel_room.yaml
+       (map_saver -f hotel_room). -->
+
+  <include file="$(find ladybug_bot_gazebo)/launch/ladybug_bot_world.launch"/>
+
+  <include file="$(find ladybug_bot_navigation)/launch/amcl_demo.launch"/>
+
+  <include file="$(find ladybug_bot_navigation)/launch/move_base.launch"/>
+</launch>

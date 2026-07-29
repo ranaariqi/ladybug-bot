@@ -1,0 +1,19 @@
+<launch>
+  <arg name="map_file" default="$(find ladybug_bot_navigation)/maps/hotel_room.yaml"/>
+  <arg name="launch_rviz" default="true"/>
+
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+
+  <node pkg="amcl" type="amcl" name="amcl" output="screen">
+    <param name="base_frame_id" value="base_footprint"/>
+    <param name="odom_frame_id" value="odom"/>
+    <param name="global_frame_id" value="map"/>
+    <param name="scan_topic" value="scan"/>
+    <param name="min_particles" value="100"/>
+    <param name="max_particles" value="3000"/>
+    <param name="update_min_d" value="0.2"/>
+    <param name="update_min_a" value="0.2"/>
+  </node>
+
+  <node pkg="rviz" type="rviz" name="rviz" required="true" if="$(arg launch_rviz)"/>
+</launch>

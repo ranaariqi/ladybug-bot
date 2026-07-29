@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ladybug_bot_navigation</name>
+  <version>0.1.0</version>
+  <description>SLAM (gmapping), localization (AMCL) and move_base navigation for Ladybug-Bot</description>
+  <maintainer email="you@example.com">ranaariqi</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>gmapping</depend>
+  <depend>amcl</depend>
+  <depend>move_base</depend>
+  <depend>map_server</depend>
+  <depend>global_planner</depend>
+  <depend>dwa_local_planner</depend>
+  <depend>ladybug_bot_gazebo</depend>
+</package>

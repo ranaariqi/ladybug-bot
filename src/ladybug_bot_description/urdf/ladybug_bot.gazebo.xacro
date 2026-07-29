@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <gazebo reference="chassis">
+    <material>Gazebo/Red</material>
+  </gazebo>
+  <gazebo reference="lidar_link">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- ===================== Differential drive =====================
+       Only the rear wheels are actuated (real motors, thesis 4.2.3).
+       Front wheels are chain-linked mechanically on the real robot;
+       here they're just free-spinning passive joints. -->
+  <gazebo>
+    <plugin name="diff_drive_controller" filename="libgazebo_ros_diff_drive.so">
+      <legacyMode>false</legacyMode>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>50</updateRate>
+      <leftJoint>rear_left_wheel_joint</leftJoint>
+      <rightJoint>rear_right_wheel_joint</rightJoint>
+      <wheelSeparation>0.45</wheelSeparation>
+      <wheelDiameter>0.2</wheelDiameter>
+      <!-- thesis 5.1: max speed 0.1 m/s -> keep torque/accel modest -->
+      <wheelTorque>20</wheelTorque>
+      <wheelAcceleration>1.0</wheelAcceleration>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <publishOdomTF>true</publishOdomTF>
+      <publishWheelTF>false</publishWheelTF>
+      <publishTf>true</publishTf>
+      <publishWheelJointState>true</publishWheelJointState>
+    </plugin>
+  </gazebo>
+
+  <!-- Front wheels: no actuator, just let physics roll them -->
+  <gazebo reference="front_left_wheel">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+  <gazebo reference="front_right_wheel">
+    <mu1>0.9</mu1>
+    <mu2>0.9</mu2>
+  </gazebo>
+
+  <!-- ===================== LiDAR (2D laser scan) =====================
+       Thesis uses a LiDAR Lite v3 point sensor spun to fake a 360 scan
+       (4.2.1). For simulation we model the *behavior* (a 360 deg 2D scan
+       on topic /scan) using Gazebo's standard ray sensor, which is what
+       gmapping/amcl expect. -->
+  <gazebo reference="lidar_link">
+    <sensor type="ray" name="lidar_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="lidar_plugin" filename="libgazebo_ros_laser.so">
+        <topicName>scan</topicName>
+        <frameName>lidar_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ===================== IMU ===================== -->
+  <gazebo reference="chassis">
+    <sensor type="imu" name="imu_sensor">
+      <always_on>true</always_on>
+      <update_rate>50</update_rate>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <topicName>imu/data</topicName>
+        <frameName>chassis</frameName>
+        <updateRateHZ>50.0</updateRateHZ>
+        <gaussianNoise>0.005</gaussianNoise>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ===================== GPS (u-blox NEO-6M equivalent) =====================
+       Requires the ros-<distro>-hector-gazebo-plugins package.
+       apt install ros-noetic-hector-gazebo-plugins -->
+  <gazebo>
+    <plugin name="gps_plugin" filename="libhector_gazebo_ros_gps.so">
+      <updateRate>4.0</updateRate>
+      <bodyName>chassis</bodyName>
+      <topicName>gps/fix</topicName>
+      <velocityTopicName>gps/fix_velocity</velocityTopicName>
+      <referenceLatitude>15.3694</referenceLatitude>
+      <referenceLongitude>44.1910</referenceLongitude>
+      <drift>0.001 0.001 0.001</drift>
+    </plugin>
+  </gazebo>
+
+</robot>

@@ -1,0 +1,21 @@
+<launch>
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+    <rosparam file="$(find ladybug_bot_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap"/>
+    <rosparam file="$(find ladybug_bot_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap"/>
+    <rosparam file="$(find ladybug_bot_navigation)/config/local_costmap_params.yaml" command="load"/>
+    <rosparam file="$(find ladybug_bot_navigation)/config/global_costmap_params.yaml" command="load"/>
+    <rosparam file="$(find ladybug_bot_navigation)/config/dwa_local_planner_params.yaml" command="load"/>
+
+    <!-- thesis 4.3.1.5: global_planner package running in Dijkstra mode
+         (use_dijkstra=true). Set to false to switch to A* instead. -->
+    <param name="base_global_planner" value="global_planner/GlobalPlanner"/>
+    <param name="GlobalPlanner/use_dijkstra" value="true"/>
+
+    <!-- thesis 4.3.1.6: DWA local planner -->
+    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>
+
+    <param name="controller_frequency" value="5.0"/>
+    <param name="planner_frequency" value="1.0"/>
+  </node>
+</launch>

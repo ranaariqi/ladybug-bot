@@ -1,0 +1,21 @@
+DWAPlannerROS:
+  # thesis 5.1: max speed 0.1 m/s -- keep the simulated robot honest to the real hardware
+  max_vel_x: 0.1
+  min_vel_x: 0.0
+  max_vel_theta: 0.5
+  min_vel_theta: -0.5
+  min_in_place_vel_theta: 0.2
+
+  acc_lim_x: 0.5
+  acc_lim_theta: 1.0
+
+  xy_goal_tolerance: 0.1
+  yaw_goal_tolerance: 0.1
+
+  sim_time: 2.0
+  vx_samples: 6
+  vtheta_samples: 20
+
+  path_distance_bias: 32.0
+  goal_distance_bias: 24.0
+  occdist_scale: 0.02

@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<robot name="ladybug_bot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Ladybug-Bot dimensions, sourced from thesis Ch.3/4/5:
+      - 4-wheel differential drive, rectangular footprint
+      - Wheel diameter  : 0.2 m   -> radius 0.1 m   (thesis 3.2.2 motor RPM calc)
+      - Body weight      : 22.1 kg (thesis 5.1)
+      - Max payload      : 2 kg
+      - Max speed        : 0.1 m/s
+      - Chassis footprint: not given exact numbers in thesis -> estimated as
+        0.5 x 0.4 x 0.2 m box, proportioned around the wheel size. Adjust
+        chassis_length / chassis_width / chassis_height below if you have
+        better measurements.
+      - Rear wheels are actuated (window glass motors, thesis 4.2.3).
+        Front wheels are chain-linked to the rear motors on each side
+        (thesis 4.2.4) -> modeled here as free-spinning passive joints,
+        since Gazebo's diff_drive plugin only actuates one joint per side.
+      - 5 joints / 6 links total, matching thesis Fig. 4-8:
+        chassis (fixed base) + 4 wheel joints + 1 fixed LiDAR joint.
+  -->
+
+  <xacro:property name="chassis_length" value="0.5"/>
+  <xacro:property name="chassis_width"  value="0.4"/>
+  <xacro:property name="chassis_height" value="0.2"/>
+  <xacro:property name="chassis_mass"   value="18.0"/> <!-- rest of 22.1kg is wheels/electronics -->
+
+  <xacro:property name="wheel_radius" value="0.1"/>
+  <xacro:property name="wheel_width"  value="0.05"/>
+  <xacro:property name="wheel_mass"   value="1.0"/>
+
+  <xacro:property name="wheel_separation" value="0.45"/> <!-- left-right gap -->
+  <xacro:property name="wheelbase"        value="0.4"/>  <!-- front-rear gap -->
+
+  <xacro:property name="lidar_radius" value="0.04"/>
+  <xacro:property name="lidar_height" value="0.06"/>
+
+  <material name="ladybug_red">
+    <color rgba="0.8 0.05 0.05 1.0"/>
+  </material>
+  <material name="black">
+    <color rgba="0.05 0.05 0.05 1.0"/>
+  </material>
+
+  <!-- ================= base_footprint (ground reference) ================= -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="chassis"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ========================= chassis ========================= -->
+  <link name="chassis">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+      <material name="ladybug_red"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${chassis_mass}"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.30" ixy="0" ixz="0" iyy="0.40" iyz="0" izz="0.50"/>
+    </inertial>
+  </link>
+
+  <!-- ========================= wheel macro ========================= -->
+  <xacro:macro name="wheel" params="prefix x_reflect y_reflect">
+    <link name="${prefix}_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${wheel_mass}"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+      </inertial>
+    </link>
+
+    <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="chassis"/>
+      <child link="${prefix}_wheel"/>
+      <origin xyz="${x_reflect*wheelbase/2} ${y_reflect*wheel_separation/2} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+
+    <transmission name="${prefix}_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}_wheel_joint">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${prefix}_wheel_motor">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <!-- rear wheels: actuated by the two window-glass motors -->
+  <xacro:wheel prefix="rear_left"   x_reflect="-1" y_reflect="1"/>
+  <xacro:wheel prefix="rear_right"  x_reflect="-1" y_reflect="-1"/>
+  <!-- front wheels: chain-linked to rear motors on each side -> passive -->
+  <xacro:wheel prefix="front_left"  x_reflect="1"  y_reflect="1"/>
+  <xacro:wheel prefix="front_right" x_reflect="1"  y_reflect="-1"/>
+
+  <!-- ========================= LiDAR ========================= -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="lidar_link"/>
+    <origin xyz="0 0 ${chassis_height/2 + lidar_height/2}" rpy="0 0 0"/>
+  </joint>
+
+  <xacro:include filename="$(find ladybug_bot_description)/urdf/ladybug_bot.gazebo.xacro"/>
+
+</robot>

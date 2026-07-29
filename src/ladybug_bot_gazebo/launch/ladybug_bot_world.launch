@@ -1,0 +1,22 @@
+<launch>
+  <arg name="world" default="$(find ladybug_bot_gazebo)/worlds/hotel_room.world"/>
+  <arg name="x" default="0"/>
+  <arg name="y" default="0"/>
+  <arg name="z" default="0.05"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world)"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro $(find ladybug_bot_description)/urdf/ladybug_bot.xacro"/>
+
+  <node name="spawn_ladybug_bot" pkg="gazebo_ros" type="spawn_model"
+        args="-urdf -param robot_description -model ladybug_bot -x $(arg x) -y $(arg y) -z $(arg z)"
+        output="screen"/>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+</launch>
